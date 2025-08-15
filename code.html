@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveChat - Connect & Share</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.5rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            gap: 1rem;
+        }
+
+        .messages-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: 60vh;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .username {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .message-content {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            margin-left: 50px;
+            position: relative;
+            line-height: 1.5;
+            color: #2c3e50;
+        }
+
+        .message-content::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 10px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 15px 15px 0;
+            border-color: transparent #f8f9fa transparent transparent;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            margin-left: 50px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .action-btn:hover {
+            background: #ecf0f1;
+            color: #2c3e50;
+            transform: translateY(-1px);
+        }
+
+        .reply-indicator {
+            background: #3498db;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .gif-message {
+            padding: 0.5rem;
+        }
+
+        .gif-message img {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 10px;
+        }
+
+        .input-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 2px solid #ecf0f1;
+            border-radius: 15px;
+            padding: 1rem;
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .send-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .tools-bar {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: #ecf0f1;
+            border: none;
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        .tool-btn:hover {
+            background: #d5dbdb;
+            transform: translateY(-1px);
+        }
+
+        .emoji-picker, .gif-picker {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.5rem;
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .emoji-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .gif-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .gif-option {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .gif-option:hover {
+            transform: scale(1.05);
+        }
+
+        .typing-indicator {
+            display: none;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 0.5rem 1rem;
+            margin-left: 50px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .typing-dots {
+            animation: pulse 1.5s infinite;
+        }
+
+        .online-count {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            padding-left: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .message-content {
+                margin-left: 0;
+            }
+            
+            .message-actions {
+                margin-left: 0;
+            }
+            
+            .online-count {
+                position: static;
+                margin: 0.5rem 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LiveChat</h1>
+        <div class="online-count">
+            <span id="onlineCount">247</span> online
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages-container" id="messagesContainer">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <span class="typing-dots">Someone is typing...</span>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Type your message..."
+                    rows="1"
+                ></textarea>
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+            
+            <div class="tools-bar">
+                <button class="tool-btn" onclick="toggleEmojiPicker()">Add Emoji</button>
+                <button class="tool-btn" onclick="toggleGifPicker()">Add GIF</button>
+                <button class="tool-btn" onclick="clearReply()">Clear Reply</button>
+            </div>
+
+            <div class="emoji-picker" id="emojiPicker">
+                <div class="emoji-grid" id="emojiGrid">
+                    <!-- Emojis will be populated here -->
+                </div>
+            </div>
+
+            <div class="gif-picker" id="gifPicker">
+                <h4 style="margin-bottom: 1rem;">Choose a GIF</h4>
+                <div class="gif-grid">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/370d5ac2-f50f-4f3b-ad91-99b83fe814d9.png" alt="Happy celebration GIF with confetti and party elements" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/69fef641-c399-4632-b108-bb189246304c.png" alt="Thumbs up approval GIF with positive gesture animation" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c0814e0a-ab9b-4c6f-afaf-1792b47940e2.png" alt="Dancing celebration GIF with colorful animated character" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/89de770c-1b99-43ae-98a6-cf0d289740b8.png" alt="Heart love GIF with romantic pink and red animation" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6bc769c2-c11b-4471-b749-965dcb58efc5.png" alt="Laughing emoji GIF with funny animated expression" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/3d55beab-5061-4c6f-a052-d64de72d11c0.png" alt="Clapping hands GIF with applause animation" class="gif-option" onclick="selectGif(this.src, this.alt)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messages = [];
+        let currentUser = 'User' + Math.floor(Math.random() * 1000);
+        let replyingTo = null;
+        let onlineUsers = Math.floor(Math.random() * 50) + 150; // Start with 150-200 users
+        let activeUsers = new Set(); // Track real active users
+
+        // Sample users for simulation
+        const sampleUsers = ['Alex', 'Jordan', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Avery', 'Quinn'];
+        
+        // Add current user to active users
+        activeUsers.add(currentUser);
+        
+        // Sample messages to start the conversation
+        const initialMessages = [
+            { user: 'Alex', content: 'Hey everyone! How\'s everyone doing today?', timestamp: new Date(Date.now() - 300000) },
+            { user: 'Jordan', content: 'Great! Just finished a really interesting project at work.', timestamp: new Date(Date.now() - 250000) },
+            { user: 'Casey', content: 'That sounds awesome Jordan! What kind of project was it?', timestamp: new Date(Date.now() - 200000) },
+            { user: 'Morgan', content: 'I love seeing people excited about their work!', timestamp: new Date(Date.now() - 150000) },
+        ];
+
+        // Emoji list for picker
+        const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌', '🤲', '🙏', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝'];
+
+        function initializeChat() {
+            populateEmojiPicker();
+            loadInitialMessages();
+            simulateActivity();
+            simulateUserJoinsLeaves();
+            updateRealOnlineCount();
+            
+            // Auto-resize textarea
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+
+            // Send message on Enter
+            textarea.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Update online count more frequently for real-time feel
+            setInterval(updateRealOnlineCount, 5000);
+            setInterval(simulateUserJoinsLeaves, 10000);
+        }
+
+        function populateEmojiPicker() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            emojis.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-btn';
+                btn.textContent = emoji;
+                btn.onclick = () => addEmoji(emoji);
+                emojiGrid.appendChild(btn);
+            });
+        }
+
+        function loadInitialMessages() {
+            initialMessages.forEach(msg => {
+                addMessage(msg.user, msg.content, msg.timestamp);
+            });
+        }
+
+        function addMessage(username, content, timestamp = new Date(), isGif = false, replyTo = null) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const avatarColor = getAvatarColor(username);
+            const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+            let replyHtml = '';
+            if (replyTo) {
+                replyHtml = `<div class="reply-indicator">Replying to ${replyTo}</div>`;
+            }
+
+            let contentHtml = '';
+            if (isGif) {
+                contentHtml = `<div class="gif-message"><img src="${content}" alt="Animated GIF message" style="max-width: 100%; border-radius: 10px;"></div>`;
+            } else {
+                contentHtml = content;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <div class="avatar" style="background: ${avatarColor}">
+                        ${username.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="username">${username}</span>
+                    <span class="timestamp">${formatTime(timestamp)}</span>
+                </div>
+                ${replyHtml}
+                <div class="message-content" id="${messageId}" style="${username === currentUser ? 'background: #f1f8ff;' : ''}">
+                    ${contentHtml}
+                </div>
+                <div class="message-actions">
+                    <button class="action-btn" onclick="reactToMessage('${messageId}', 'like')">
+                        <span>👍</span> <span id="like_${messageId}">0</span>
+                    </button>
+                    <button class="action-btn" onclick="reactToMessage('${messageId}', 'heart')">
+                        <span>❤️</span> <span id="heart_${messageId}">0</span>
+                    </button>
+                    <button class="action-btn" onclick="replyToMessage('${username}')">
+                        Reply
+                    </button>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Add random reactions after a delay
+            setTimeout(() => {
+                const randomReactions = Math.floor(Math.random() * 5);
+                for (let i = 0; i < randomReactions; i++) {
+                    const reactionType = Math.random() > 0.5 ? 'like' : 'heart';
+                    reactToMessage(messageId, reactionType);
+                }
+            }, Math.random() * 3000 + 1000);
+        }
+
+        function getAvatarColor(username) {
+            const colors = [
+                'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(45deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(45deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(45deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(45deg, #a8edea 0%, #fed6e3 100%)',
+                'linear-gradient(45deg, #ff9a9e 0%, #fecfef 100%)',
+                'linear-gradient(45deg, #a18cd1 0%, #fbc2eb 100%)'
+            ];
+            const index = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+            return colors[index];
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (content) {
+                addMessage(currentUser, content, new Date(), false, replyingTo);
+                input.value = '';
+                input.style.height = 'auto';
+                clearReply();
+                
+                // Mark user as active when sending message
+                activeUsers.add(currentUser);
+                updateRealOnlineCount();
+                
+                // Simulate others typing and responding
+                setTimeout(simulateResponse, Math.random() * 3000 + 1000);
+            }
+        }
+
+        function simulateResponse() {
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                const responses = [
+                    "That's really interesting!",
+                    "I totally agree with that",
+                    "Great point!",
+                    "Thanks for sharing",
+                    "Wow, I never thought of it that way",
+                    "That made me laugh!",
+                    "So true!",
+                    "Absolutely!",
+                    "I was just thinking the same thing",
+                    "Love this conversation!"
+                ];
+                
+                const randomUser = sampleUsers[Math.floor(Math.random() * sampleUsers.length)];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                
+                addMessage(randomUser, randomResponse);
+            }, Math.random() * 2000 + 1000);
+        }
+
+        function simulateActivity() {
+            // Add initial sample users to active users
+            sampleUsers.forEach(user => activeUsers.add(user));
+            
+            // Randomly add messages from other users
+            setInterval(() => {
+                if (Math.random() > 0.7) { // 30% chance every interval
+                    const topics = [
+                        "Just had the best coffee ever!",
+                        "Anyone watching anything good lately?",
+                        "The weather is amazing today",
+                        "Working on some exciting projects",
+                        "Love this community!",
+                        "Hope everyone is having a great day",
+                        "Just discovered a new favorite song",
+                        "This chat always brightens my day"
+                    ];
+                    
+                    const activeUsersArray = Array.from(activeUsers);
+                    const randomUser = activeUsersArray[Math.floor(Math.random() * activeUsersArray.length)];
+                    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+                    
+                    showTypingIndicator();
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        addMessage(randomUser, randomTopic);
+                        // Keep user active when they send a message
+                        activeUsers.add(randomUser);
+                        updateRealOnlineCount();
+                    }, Math.random() * 3000 + 1000);
+                }
+            }, 15000);
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'block';
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            const gifPicker = document.getElementById('gifPicker');
+            gifPicker.style.display = 'none';
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function toggleGifPicker() {
+            const picker = document.getElementById('gifPicker');
+            const emojiPicker = document.getElementById('emojiPicker');
+            emojiPicker.style.display = 'none';
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('emojiPicker').style.display = 'none';
+        }
+
+        function selectGif(src, alt) {
+            addMessage(currentUser, src, new Date(), true, replyingTo);
+            document.getElementById('gifPicker').style.display = 'none';
+            clearReply();
+        }
+
+        function reactToMessage(messageId, reactionType) {
+            const countElement = document.getElementById(`${reactionType}_${messageId}`);
+            if (countElement) {
+                const currentCount = parseInt(countElement.textContent);
+                countElement.textContent = currentCount + 1;
+            }
+        }
+
+        function replyToMessage(username) {
+            replyingTo = username;
+            const input = document.getElementById('messageInput');
+            input.placeholder = `Replying to ${username}...`;
+            input.focus();
+        }
+
+        function clearReply() {
+            replyingTo = null;
+            document.getElementById('messageInput').placeholder = 'Type your message...';
+        }
+
+        function updateRealOnlineCount() {
+            // Base count from active users + simulated background users
+            const baseUsers = activeUsers.size;
+            const simulatedUsers = Math.floor(Math.random() * 100) + 100; // 100-200 background users
+            const totalUsers = baseUsers + simulatedUsers;
+            
+            // Add some realistic fluctuation
+            const variation = Math.floor(Math.random() * 10) - 5; // -5 to +5
+            onlineUsers = Math.max(50, totalUsers + variation);
+            
+            document.getElementById('onlineCount').textContent = onlineUsers;
+        }
+
+        function simulateUserJoinsLeaves() {
+            // Simulate users joining and leaving
+            const action = Math.random();
+            
+            if (action > 0.6) { // 40% chance someone joins
+                const newUser = 'User' + Math.floor(Math.random() * 9999);
+                activeUsers.add(newUser);
+                
+                // Sometimes show a join message
+                if (Math.random() > 0.8) {
+                    setTimeout(() => {
+                        addSystemMessage(`${newUser} joined the chat`);
+                    }, Math.random() * 2000);
+                }
+            } else if (action < 0.3 && activeUsers.size > 10) { // 30% chance someone leaves (keep minimum users)
+                const usersArray = Array.from(activeUsers);
+                const userToRemove = usersArray[Math.floor(Math.random() * usersArray.length)];
+                
+                // Don't remove the current user
+                if (userToRemove !== currentUser) {
+                    activeUsers.delete(userToRemove);
+                    
+                    // Sometimes show a leave message
+                    if (Math.random() > 0.9) {
+                        setTimeout(() => {
+                            addSystemMessage(`${userToRemove} left the chat`);
+                        }, Math.random() * 2000);
+                    }
+                }
+            }
+            
+            updateRealOnlineCount();
+        }
+
+        function addSystemMessage(content) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.opacity = '0.7';
+
+            messageDiv.innerHTML = `
+                <div style="text-align: center; color: #7f8c8d; font-style: italic; font-size: 0.9rem; padding: 0.5rem;">
+                    ${content}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Close pickers when clicking outside
+        document.addEventListener('click', function(e) {
+            const emojiPicker = document.getElementById('emojiPicker');
+            const gifPicker = document.getElementById('gifPicker');
+            
+            if (!e.target.closest('.tool-btn') && !e.target.closest('.emoji-picker') && !e.target.closest('.gif-picker')) {
+                emojiPicker.style.display = 'none';
+                gifPicker.style.display = 'none';
+            }
+        });
+
+        // Initialize the chat when page loads
+        window.addEventListener('load', initializeChat);
+    </script>
+</body>
+</html>
